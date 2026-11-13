@@ -204,9 +204,9 @@ function updateRoseBloom(now) {
 /* ==========================================================================
    SISTEMA DE PÉTALOS CAÍDOS:
    - Inicia con 2 pétalos ya caídos en el suelo.
-   - Cada pétalo cae donde tenga que caer (posición orgánica no fija).
-   - Donde cae, mantiene su lugar en el suelo.
-   - El pétalo más antiguo de los que estaban en el suelo se desvanece y desaparece.
+   - Cada pétalo cae con física continua y suave (sin saltos bruscos).
+   - Donde cae, mantiene su lugar exacto de aterrizaje.
+   - El pétalo más antiguo se desvanece suavemente.
    - En pantalla siempre quedan exactamente 2 pétalos en reposo.
    ========================================================================== */
 const deadPetalsContainer = document.getElementById("deadPetals");
@@ -253,7 +253,6 @@ let fallCycle = {
   targetY: 390,
   targetRot: -15,
   swayAmp: 16,
-  swayFreq: 2.5,
   duration: 5400,
   elapsed: 0,
   phase: "waiting",
@@ -268,7 +267,7 @@ function launchNextPetal() {
   fallTurn++;
   const toLeftSide = fallTurn % 2 === 1;
 
-  // Posición orgánica en el suelo: no fija, cae naturalmente donde el viento lo lleve
+  // Posición orgánica en el suelo: cae naturalmente donde el viento lo lleve
   const targetX = toLeftSide
     ? (56 + Math.random() * 32)   // Entre 56px y 88px a la izquierda del tallo
     : (102 + Math.random() * 34); // Entre 102px y 136px a la derecha del tallo
@@ -290,9 +289,8 @@ function launchNextPetal() {
     targetX,
     targetY,
     targetRot,
-    swayAmp: (toLeftSide ? 1 : -1) * (12 + Math.random() * 8),
-    swayFreq: 2.2 + Math.random() * 0.6,
-    duration: 5200 + Math.random() * 800,
+    swayAmp: (toLeftSide ? 1 : -1) * (14 + Math.random() * 8),
+    duration: 5400 + Math.random() * 600,
     elapsed: 0,
     phase: "falling",
     waitDuration: 2800 + Math.random() * 800,
@@ -313,11 +311,16 @@ function updatePetalsCycle(dt) {
     fallCycle.elapsed += dt;
     const progress = Math.min(1, fallCycle.elapsed / fallCycle.duration);
 
-    // Trayectoria mecida por el viento hacia donde tenga que caer
-    const sway = Math.sin(progress * Math.PI * fallCycle.swayFreq) * fallCycle.swayAmp * (1 - progress * 0.35);
+    // Amortiguación del viento:
+    // (1 - progress) asegura matemáticamente que la oscilación sway sea EXACTAMENTE 0 al llegar al suelo.
+    // Así, el pétalo aterriza sin saltos bruscos en su posición final.
+    const sway = Math.sin(progress * Math.PI * 3) * fallCycle.swayAmp * (1 - progress);
     const currX = fallCycle.startX + (fallCycle.targetX - fallCycle.startX) * progress + sway;
     const currY = fallCycle.startY + (fallCycle.targetY - fallCycle.startY) * progress;
-    const currRot = -20 + Math.sin(progress * Math.PI * fallCycle.swayFreq) * 22 + (fallCycle.targetRot + 20) * progress;
+
+    // Rotación suave que culmina exactamente en targetRot sin saltar
+    const rotOsc = Math.sin(progress * Math.PI * 3) * 16 * (1 - progress);
+    const currRot = -20 * (1 - progress) + fallCycle.targetRot * progress + rotOsc;
 
     // Opacidad de entrada suave
     const newAlpha = progress < 0.15 ? (progress / 0.15) * 0.55 : 0.55;
@@ -333,9 +336,9 @@ function updatePetalsCycle(dt) {
       }
     }
 
-    // ATERRIZAJE: Mantiene exactamente el lugar donde cayó
+    // ATERRIZAJE CONTINUO: En progress = 1, currX es idéntico a targetX y currY a targetY.
+    // Cero saltos bruscos, se queda exactamente en su pose final.
     if (progress >= 1) {
-      // Eliminar del DOM el pétalo antiguo que ya se desvaneció
       if (fallCycle.oldEl) {
         if (fallCycle.oldEl.parentNode) {
           fallCycle.oldEl.parentNode.removeChild(fallCycle.oldEl);
@@ -346,8 +349,8 @@ function updatePetalsCycle(dt) {
         }
       }
 
-      // Fijar el nuevo pétalo exactamente donde cayó en el suelo
-      fallCycle.el.style.transform = `translate3d(${fallCycle.targetX.toFixed(2)}px, ${fallCycle.targetY.toFixed(2)}px, 0) rotate(${fallCycle.targetRot.toFixed(2)}deg)`;
+      // Se queda exactamente donde terminó de posarse
+      fallCycle.el.style.transform = `translate3d(${currX.toFixed(2)}px, ${currY.toFixed(2)}px, 0) rotate(${currRot.toFixed(2)}deg)`;
       fallCycle.el.style.opacity = "0.55";
       restingPetals.push(fallCycle.el);
 
