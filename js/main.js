@@ -28,7 +28,8 @@ const COLORS = [
   { name: "Vino Borgoña",    main: "#be123c", mid: "#7a0926", back: "#a60f35", light: "#fb7185", glow: "rgba(225, 29, 72, 0.85)" }
 ];
 
-let index = 0;
+// Elegir color aleatorio inmediatamente al cargar
+let index = Math.floor(Math.random() * COLORS.length);
 const root = document.documentElement.style;
 
 function updateRoseColor(newIndex, burst = false) {
@@ -51,6 +52,9 @@ function updateRoseColor(newIndex, burst = false) {
   }
 }
 
+// Aplicar el color aleatorio de inmediato
+updateRoseColor(index, false);
+
 // Bloqueo total de zoom en móviles (doble toque, pinch, gestos)
 document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
 document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
@@ -65,50 +69,26 @@ document.addEventListener('touchstart', (e) => {
 
 document.addEventListener('touchend', (e) => {
   const now = performance.now();
-  if (now - lastTouchTime <= 320) {
+  if (now - lastTouchTime <= 300) {
     e.preventDefault(); // Evitar zoom por doble toque rápido
   }
   lastTouchTime = now;
 }, { passive: false });
 
-// Botones laterales dedicados
-const btnPrev = document.getElementById("btnPrev");
-const btnNext = document.getElementById("btnNext");
-
-if (btnPrev) {
-  btnPrev.addEventListener("click", (e) => {
-    e.stopPropagation();
-    updateRoseColor(index - 1, true);
-    const rect = btnPrev.getBoundingClientRect();
-    createSparkles(rect.right, rect.top + rect.height / 2, 22);
-  });
-}
-
-if (btnNext) {
-  btnNext.addEventListener("click", (e) => {
-    e.stopPropagation();
-    updateRoseColor(index + 1, true);
-    const rect = btnNext.getBoundingClientRect();
-    createSparkles(rect.left, rect.top + rect.height / 2, 22);
-  });
-}
-
-// Interacción amplia en pantalla (mitad izquierda retrocede, mitad derecha o rosa avanza)
+// Interacción en pantalla completa sin botones molestos:
+// - Mitad izquierda (0% a 50% de la pantalla) retrocede de color
+// - Mitad derecha (50% a 100%) o tocar la rosa avanza de color
 function handleTrigger(clientX, clientY, target) {
-  // Ignorar si el clic fue en los botones laterales (ya tienen su handler)
-  if (btnPrev && btnPrev.contains(target)) return;
-  if (btnNext && btnNext.contains(target)) return;
-
   const roseEl = document.getElementById("rose");
   if (roseEl && roseEl.contains(target)) {
     updateRoseColor(index + 1, true);
     createSparkles(clientX, clientY, 34);
   } else if (clientX < window.innerWidth * 0.5) {
     updateRoseColor(index - 1, true);
-    createSparkles(clientX, clientY, 20);
+    createSparkles(clientX, clientY, 22);
   } else {
     updateRoseColor(index + 1, true);
-    createSparkles(clientX, clientY, 20);
+    createSparkles(clientX, clientY, 22);
   }
 }
 
@@ -425,10 +405,8 @@ function animate(now = performance.now()) {
   requestAnimationFrame(animate);
 }
 
-// Color aleatorio inicial cada vez que se entra o recarga
-window.onload = () => {
-  const randomIndex = Math.floor(Math.random() * COLORS.length);
-  updateRoseColor(randomIndex, false);
+// Iniciar animación al cargar
+window.addEventListener("load", () => {
   lastFrameTime = performance.now();
   animate();
-};
+});
