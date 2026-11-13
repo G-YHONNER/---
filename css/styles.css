@@ -40,7 +40,7 @@ html, body {
   touch-action: none;
 }
 
-/* Luz de fondo suave y nebulosa mágica (sin blur pesado para evitar parpadeos GPU) */
+/* Luz de fondo suave y nebulosa mágica */
 .ambient-light {
   position: fixed;
   top: 45%;
@@ -123,6 +123,65 @@ html, body {
   background: linear-gradient(90deg, transparent, var(--c-light), transparent);
   box-shadow: 0 0 10px var(--c-glow);
   transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* ==========================================================================
+   BOTONES LATERALES AMPLIOS Y CÓMODOS PARA CAMBIAR EL COLOR
+   ========================================================================== */
+.nav-side {
+  position: fixed;
+  top: 54%;
+  transform: translateY(-50%);
+  width: 58px;
+  height: 100px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 30px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 25;
+  touch-action: manipulation;
+  outline: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+  user-select: none;
+}
+
+.nav-side:hover,
+.nav-side:active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  border-color: var(--c-light);
+  box-shadow: 0 0 22px var(--c-glow);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.nav-left {
+  left: 18px;
+}
+
+.nav-right {
+  right: 18px;
+}
+
+@media (max-width: 600px) {
+  .nav-side {
+    width: 50px;
+    height: 88px;
+    font-size: 1.45rem;
+    left: 8px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .nav-right {
+    left: auto;
+    right: 8px;
+  }
 }
 
 /* ==========================================================================

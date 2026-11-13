@@ -46,7 +46,7 @@ function updateRoseColor(newIndex, burst = false) {
     const roseEl = document.getElementById("rose");
     if (roseEl) {
       const roseRect = roseEl.getBoundingClientRect();
-      createSparkles(roseRect.left + 100, roseRect.top + 95, 28);
+      createSparkles(roseRect.left + 100, roseRect.top + 95, 30);
     }
   }
 }
@@ -59,7 +59,7 @@ document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: fa
 let lastTouchTime = 0;
 document.addEventListener('touchstart', (e) => {
   if (e.touches.length > 1) {
-    e.preventDefault(); // Evitar zoom con dos o más dedos (pinch)
+    e.preventDefault(); // Evitar zoom con dos o más dedos
   }
 }, { passive: false });
 
@@ -71,18 +71,44 @@ document.addEventListener('touchend', (e) => {
   lastTouchTime = now;
 }, { passive: false });
 
-// Cambiar de color al tocar o hacer clic
+// Botones laterales dedicados
+const btnPrev = document.getElementById("btnPrev");
+const btnNext = document.getElementById("btnNext");
+
+if (btnPrev) {
+  btnPrev.addEventListener("click", (e) => {
+    e.stopPropagation();
+    updateRoseColor(index - 1, true);
+    const rect = btnPrev.getBoundingClientRect();
+    createSparkles(rect.right, rect.top + rect.height / 2, 22);
+  });
+}
+
+if (btnNext) {
+  btnNext.addEventListener("click", (e) => {
+    e.stopPropagation();
+    updateRoseColor(index + 1, true);
+    const rect = btnNext.getBoundingClientRect();
+    createSparkles(rect.left, rect.top + rect.height / 2, 22);
+  });
+}
+
+// Interacción amplia en pantalla (mitad izquierda retrocede, mitad derecha o rosa avanza)
 function handleTrigger(clientX, clientY, target) {
+  // Ignorar si el clic fue en los botones laterales (ya tienen su handler)
+  if (btnPrev && btnPrev.contains(target)) return;
+  if (btnNext && btnNext.contains(target)) return;
+
   const roseEl = document.getElementById("rose");
   if (roseEl && roseEl.contains(target)) {
     updateRoseColor(index + 1, true);
-    createSparkles(clientX, clientY, 32);
-  } else if (clientX < window.innerWidth * 0.35) {
+    createSparkles(clientX, clientY, 34);
+  } else if (clientX < window.innerWidth * 0.5) {
     updateRoseColor(index - 1, true);
-    createSparkles(clientX, clientY, 18);
+    createSparkles(clientX, clientY, 20);
   } else {
     updateRoseColor(index + 1, true);
-    createSparkles(clientX, clientY, 18);
+    createSparkles(clientX, clientY, 20);
   }
 }
 
@@ -96,10 +122,9 @@ window.addEventListener("keydown", (e) => {
 });
 
 /* ==========================================================================
-   CANVAS DE PARTÍCULAS (SIN PARPADEO / SIN FLICKER NEGRO)
+   CANVAS DE PARTÍCULAS
    ========================================================================== */
 const canvas = document.getElementById("canvas");
-// Contexto 2D estándar sincronizado con el compositor del navegador
 const ctx = canvas.getContext("2d");
 let w = (canvas.width = window.innerWidth);
 let h = (canvas.height = window.innerHeight);
@@ -263,7 +288,7 @@ function updateFallingPetals(dt) {
   }
 }
 
-// Rastro de hadas al deslizar el dedo o mover mouse
+// Rastro de hadas al mover mouse o deslizar el dedo
 let lastTrail = 0;
 function handlePointerMove(x, y) {
   const now = performance.now();
@@ -400,8 +425,10 @@ function animate(now = performance.now()) {
   requestAnimationFrame(animate);
 }
 
+// Color aleatorio inicial cada vez que se entra o recarga
 window.onload = () => {
-  updateRoseColor(0, false);
+  const randomIndex = Math.floor(Math.random() * COLORS.length);
+  updateRoseColor(randomIndex, false);
   lastFrameTime = performance.now();
   animate();
 };
