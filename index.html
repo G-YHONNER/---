@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Para ti, Dianna Marisol</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@1,600;1,700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- Canvas de partículas -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Luz ambiental y reflejo en el suelo -->
+  <div class="ambient-light"></div>
+  <div class="ground-glow"></div>
+
+  <!-- Dedicatoria arriba con nueva tipografía editorial de lujo -->
+  <div class="title-box">
+    <span class="dedication-prefix">Para ti</span>
+    <h2>Dianna Marisol</h2>
+    <div class="divider"></div>
+    <p id="phraseText">Una rosa que nunca se marchita</p>
+  </div>
+
+  <!-- Estructura original de la rosa (sin frasco y sin botones visibles) -->
+  <div class="rose-stage">
+    <div class="container" id="rose" title="Toca para cambiar de color">
+      <div class="thorns">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="leaves">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="petals">
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
+      <div class="deadPetals">
+        <div id="fallingPetal1"></div>
+        <div id="fallingPetal2"></div>
+        <div></div>
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

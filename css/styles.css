@@ -1,0 +1,360 @@
+:root {
+  --c-main: #e01e5a;
+  --c-mid: #b51244;
+  --c-back: #d11952;
+  --c-light: #ff7aa2;
+  --c-glow: rgba(255, 46, 108, 0.85);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fondo azul nocturno mejorado con profundidad */
+body {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 35%, #11224d 0%, #09132c 45%, #040814 80%, #02040a 100%);
+  font-family: 'Montserrat', sans-serif;
+}
+
+#canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Luz de fondo suave y nebulosa mágica */
+.ambient-light {
+  position: fixed;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c-glow) 0%, transparent 70%);
+  opacity: 0.38;
+  filter: blur(35px);
+  pointer-events: none;
+  z-index: 1;
+  transition: background 0.5s ease;
+  animation: pulseGlow 4s ease-in-out infinite alternate;
+}
+
+/* Reflejo luminoso en el suelo debajo de la rosa */
+.ground-glow {
+  position: fixed;
+  top: calc(54% + 192px);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 180px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--c-glow) 0%, transparent 75%);
+  opacity: 0.45;
+  filter: blur(10px);
+  pointer-events: none;
+  z-index: 1;
+  transition: background 0.5s ease;
+}
+
+@keyframes pulseGlow {
+  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.3; }
+  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.45; }
+}
+
+/* Texto superior con nueva tipografía elegante para Dianna Marisol */
+.title-box {
+  position: fixed;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 10;
+  width: 92%;
+  max-width: 720px;
+  pointer-events: none;
+}
+
+.title-box .dedication-prefix {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: clamp(0.85rem, 2.2vw, 1.05rem);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85);
+  margin-bottom: 4px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.title-box h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: clamp(2.6rem, 7vw, 4.2rem);
+  letter-spacing: 1.5px;
+  color: #ffffff;
+  text-shadow: 0 0 16px var(--c-glow), 0 0 36px var(--c-glow);
+  margin-bottom: 10px;
+  transition: text-shadow 0.4s ease;
+}
+
+.title-box .divider {
+  width: 120px;
+  height: 1px;
+  margin: 0 auto 10px;
+  background: linear-gradient(90deg, transparent, var(--c-light), transparent);
+  box-shadow: 0 0 10px var(--c-glow);
+  transition: background 0.4s ease, box-shadow 0.4s ease;
+}
+
+.title-box p {
+  font-size: clamp(0.78rem, 2vw, 0.92rem);
+  color: rgba(255, 255, 255, 0.82);
+  letter-spacing: 2.5px;
+  font-weight: 300;
+  text-transform: uppercase;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+/* ==========================================================================
+   DISEÑO Y ORDEN DE Z-INDEX DE LA ROSA (Centrado exactamente en X = 100px)
+   ========================================================================== */
+.rose-stage {
+  position: fixed;
+  top: 54%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 5;
+}
+
+.container {
+  width: 200px;
+  height: 400px;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Base de todos los pétalos */
+.petals > div {
+  position: absolute;
+  background: var(--c-main);
+  width: 45px;
+  height: 80px;
+  top: 55px;
+  will-change: transform, background, box-shadow;
+  backface-visibility: hidden;
+  transition:
+    background 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+/* Pétalo central superior (#1) - centrado en X=100 (left: 77.5px) */
+.petals > div:nth-child(1) {
+  border-radius: 15px;
+  left: 77.5px;
+  top: 42px;
+  z-index: 4;
+  background: linear-gradient(180deg, var(--c-light) 0%, var(--c-main) 80%);
+  box-shadow: 0 0 35px var(--c-glow);
+}
+
+/* Pétalos principales del frente (#2 izquierdo y #3 derecho) unidos exactamente en X=100 */
+.petals > div:nth-child(2) {
+  left: 55px;
+  top: 55px;
+  z-index: 6;
+  border-radius: 0px 30px 0px 30px;
+  background: linear-gradient(165deg, var(--c-light) 0%, var(--c-main) 55%, var(--c-mid) 100%);
+  box-shadow:
+    inset 0 0 20px var(--c-mid),
+    0 0 25px var(--c-glow);
+  transform-origin: bottom right;
+}
+
+.petals > div:nth-child(3) {
+  left: 100px;
+  top: 55px;
+  z-index: 6;
+  border-radius: 30px 0px 30px 0px;
+  background: linear-gradient(195deg, var(--c-light) 0%, var(--c-main) 55%, var(--c-mid) 100%);
+  box-shadow:
+    inset 0 0 20px var(--c-mid),
+    0 0 25px var(--c-glow);
+  transform-origin: bottom left;
+}
+
+/* Pétalos laterales abiertos (#4 izquierdo y #5 derecho) - CAPA MEDIA (z-index: 5) */
+.petals > div:nth-child(4) {
+  left: 55px;
+  top: 58px;
+  z-index: 5;
+  border-radius: 0px 30px 0px 30px;
+  background: linear-gradient(155deg, var(--c-light) 0%, var(--c-main) 60%, var(--c-mid) 100%);
+  box-shadow:
+    inset 0 0 20px var(--c-mid),
+    0 0 25px var(--c-glow);
+  transform-origin: bottom right;
+  transform: translate3d(0, 0, 0) rotate(-16deg);
+}
+
+.petals > div:nth-child(5) {
+  left: 100px;
+  top: 58px;
+  z-index: 5;
+  border-radius: 30px 0px 30px 0px;
+  background: linear-gradient(205deg, var(--c-light) 0%, var(--c-main) 60%, var(--c-mid) 100%);
+  box-shadow:
+    inset 0 0 20px var(--c-mid),
+    0 0 25px var(--c-glow);
+  transform-origin: bottom left;
+  transform: translate3d(0, 0, 0) rotate(16deg);
+}
+
+/* Pétalos traseros superiores (#6 izquierdo y #7 derecho) - AL FONDO (z-index: 3) e iluminados */
+.petals > div:nth-child(6),
+.petals > div:nth-child(7) {
+  width: 45px;
+  height: 80px;
+  top: 47px;
+  z-index: 3;
+  background: linear-gradient(180deg, var(--c-light) 0%, var(--c-back) 65%, var(--c-mid) 100%);
+  box-shadow:
+    inset 0 6px 14px rgba(255, 255, 255, 0.4),
+    0 0 35px var(--c-glow);
+}
+
+.petals > div:nth-child(6) {
+  left: 55px;
+  border-radius: 0px 30px 0px 30px;
+  transform-origin: bottom right;
+  transform: translate3d(0, 0, 0) rotate(-7deg);
+}
+
+.petals > div:nth-child(7) {
+  left: 100px;
+  border-radius: 30px 0px 30px 0px;
+  transform-origin: bottom left;
+  transform: translate3d(0, 0, 0) rotate(7deg);
+}
+
+/* Pétalos caídos sincronizados con el color actual */
+.deadPetals > div {
+  position: absolute;
+  background: linear-gradient(135deg, var(--c-light) 0%, var(--c-main) 100%);
+  width: 20px;
+  height: 15px;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  border-radius: 0px 30px 0px 30px;
+  box-shadow: 0 0 12px var(--c-glow);
+  transition:
+    background 0.4s ease,
+    box-shadow 0.4s ease;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.deadPetals > div:nth-child(3) {
+  left: 79px;
+  top: 390px;
+  opacity: 0.5;
+  transform: rotate(-10deg);
+}
+
+.deadPetals > div:nth-child(4) {
+  left: 97px;
+  top: 392px;
+  opacity: 0.5;
+  transform: rotate(12deg);
+}
+
+/* Hojas y tallo perfectamente centrados en X = 100px */
+.leaves > div:nth-last-child(1) {
+  position: absolute;
+  width: 55px;
+  height: 30px;
+  background: #338f37;
+  top: 112px;
+  left: 72.5px;
+  border-radius: 100px;
+  z-index: 2;
+}
+
+.leaves > div:nth-child(1) {
+  position: absolute;
+  width: 6px;
+  height: 210px;
+  background: #054c05;
+  top: 132px;
+  left: 97px;
+  border-radius: 0 0 100px 100px;
+  z-index: 1;
+}
+
+.leaves > div:nth-child(2) {
+  position: absolute;
+  width: 30px;
+  height: 50px;
+  border-radius: 5px 40px 20px 40px;
+  background: #054c05;
+  transform-origin: bottom;
+  transform: rotate(-30deg);
+  top: 180px;
+  left: 77px;
+  box-shadow: inset 5px 5px #066406;
+  z-index: 2;
+}
+
+.leaves > div:nth-child(3) {
+  position: absolute;
+  width: 30px;
+  height: 50px;
+  border-radius: 40px 5px 40px 20px;
+  background: #054c05;
+  transform-origin: bottom;
+  transform: rotate(30deg);
+  top: 150px;
+  left: 93px;
+  box-shadow: inset -5px 5px #066406;
+  z-index: 2;
+}
+
+/* Espinas perfectamente pegadas al tallo centrado (97px a 103px) */
+.thorns > div {
+  position: absolute;
+  width: 0;
+  height: 0;
+  top: 140px;
+}
+
+.thorns > div:nth-child(odd) {
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 5px solid #054c05;
+  left: 103px;
+}
+
+.thorns > div:nth-child(even) {
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-right: 5px solid #054c05;
+  left: 92px;
+}
+
+.thorns > div:nth-child(1) { top: 200px; }
+.thorns > div:nth-child(2) { top: 170px; }
+.thorns > div:nth-child(3) { top: 230px; }
+.thorns > div:nth-child(4) { top: 260px; }
