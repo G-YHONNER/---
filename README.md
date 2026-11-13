@@ -41,3 +41,4 @@ Abre `index.html` en cualquier navegador moderno. No requiere servidor ni depend
 ---
 
 *Hecho con 💖 para Dianna Marisol*
+

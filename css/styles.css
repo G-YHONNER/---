@@ -11,17 +11,23 @@
   padding: 0;
   box-sizing: border-box;
   user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
 
-/* Fondo azul nocturno mejorado con profundidad */
-body {
+html, body {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 35%, #11224d 0%, #09132c 45%, #040814 80%, #02040a 100%);
+  position: fixed;
+  inset: 0;
+  background-color: #040814;
+  background: radial-gradient(circle at 50% 35%, #11224d 0%, #09132c 45%, #040814 80%, #02040a 100%);
   font-family: 'Montserrat', sans-serif;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 #canvas {
@@ -31,23 +37,24 @@ body {
   height: 100%;
   pointer-events: none;
   z-index: 2;
+  touch-action: none;
 }
 
-/* Luz de fondo suave y nebulosa mágica */
+/* Luz de fondo suave y nebulosa mágica (sin blur pesado para evitar parpadeos GPU) */
 .ambient-light {
   position: fixed;
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 340px;
-  height: 340px;
+  width: 360px;
+  height: 360px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--c-glow) 0%, transparent 70%);
-  opacity: 0.38;
-  filter: blur(35px);
+  background: radial-gradient(circle, var(--c-glow) 0%, rgba(255, 46, 108, 0.25) 30%, transparent 70%);
+  opacity: 0.42;
   pointer-events: none;
   z-index: 1;
   transition: background 0.5s ease;
+  will-change: transform, opacity;
   animation: pulseGlow 4s ease-in-out infinite alternate;
 }
 
@@ -60,20 +67,19 @@ body {
   width: 180px;
   height: 28px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, var(--c-glow) 0%, transparent 75%);
-  opacity: 0.45;
-  filter: blur(10px);
+  background: radial-gradient(ellipse at center, var(--c-glow) 0%, rgba(255, 46, 108, 0.2) 40%, transparent 75%);
+  opacity: 0.5;
   pointer-events: none;
   z-index: 1;
   transition: background 0.5s ease;
 }
 
 @keyframes pulseGlow {
-  0% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.3; }
-  100% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.45; }
+  0% { transform: translate(-50%, -50%) scale(0.94); opacity: 0.32; }
+  100% { transform: translate(-50%, -50%) scale(1.06); opacity: 0.48; }
 }
 
-/* Texto superior con nueva tipografía elegante para Dianna Marisol */
+/* Texto superior con tipografía elegante para Dianna Marisol */
 .title-box {
   position: fixed;
   top: 28px;
@@ -84,6 +90,7 @@ body {
   width: 92%;
   max-width: 720px;
   pointer-events: none;
+  touch-action: none;
 }
 
 .title-box .dedication-prefix {
@@ -112,20 +119,10 @@ body {
 .title-box .divider {
   width: 120px;
   height: 1px;
-  margin: 0 auto 10px;
+  margin: 0 auto;
   background: linear-gradient(90deg, transparent, var(--c-light), transparent);
   box-shadow: 0 0 10px var(--c-glow);
   transition: background 0.4s ease, box-shadow 0.4s ease;
-}
-
-.title-box p {
-  font-size: clamp(0.78rem, 2vw, 0.92rem);
-  color: rgba(255, 255, 255, 0.82);
-  letter-spacing: 2.5px;
-  font-weight: 300;
-  text-transform: uppercase;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 /* ==========================================================================
@@ -137,6 +134,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 5;
+  touch-action: none;
 }
 
 .container {
@@ -144,6 +142,7 @@ body {
   height: 400px;
   position: relative;
   cursor: pointer;
+  touch-action: none;
 }
 
 /* Base de todos los pétalos */

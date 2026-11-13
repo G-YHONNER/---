@@ -28,58 +28,66 @@ const COLORS = [
   { name: "Vino Borgoña",    main: "#be123c", mid: "#7a0926", back: "#a60f35", light: "#fb7185", glow: "rgba(225, 29, 72, 0.85)" }
 ];
 
-// Frases románticas sutiles que van rotando al cambiar el color
-const PHRASES = [
-  "Una rosa que nunca se marchita",
-  "Cada color brilla por ti",
-  "Un detalle especial para alguien única",
-  "Ningún color se compara con tu luz",
-  "Toca la rosa para pedir un deseo",
-  "24 colores, pero tú eres el más bonito"
-];
-
 let index = 0;
 const root = document.documentElement.style;
-const phraseEl = document.getElementById("phraseText");
 
 function updateRoseColor(newIndex, burst = false) {
   index = (newIndex + COLORS.length) % COLORS.length;
   const c = COLORS[index];
 
-  // Cambia todos los pétalos al mismo tiempo sin que quede rastro del color anterior
+  // Cambia todos los pétalos simultáneamente
   root.setProperty("--c-main", c.main);
   root.setProperty("--c-mid", c.mid);
   root.setProperty("--c-back", c.back);
   root.setProperty("--c-light", c.light);
   root.setProperty("--c-glow", c.glow);
 
-  if (burst && phraseEl) {
-    phraseEl.style.opacity = "0";
-    phraseEl.style.transform = "translateY(4px)";
-    setTimeout(() => {
-      phraseEl.textContent = PHRASES[index % PHRASES.length];
-      phraseEl.style.opacity = "1";
-      phraseEl.style.transform = "translateY(0)";
-    }, 200);
-
-    const roseRect = document.getElementById("rose").getBoundingClientRect();
-    createSparkles(roseRect.left + 100, roseRect.top + 95, 28);
+  if (burst) {
+    const roseEl = document.getElementById("rose");
+    if (roseEl) {
+      const roseRect = roseEl.getBoundingClientRect();
+      createSparkles(roseRect.left + 100, roseRect.top + 95, 28);
+    }
   }
 }
 
-// Cambiar de color al presionar en cualquier parte (izquierda retrocede, derecha o sobre la rosa avanza)
-window.addEventListener("click", (e) => {
+// Bloqueo total de zoom en móviles (doble toque, pinch, gestos)
+document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
+let lastTouchTime = 0;
+document.addEventListener('touchstart', (e) => {
+  if (e.touches.length > 1) {
+    e.preventDefault(); // Evitar zoom con dos o más dedos (pinch)
+  }
+}, { passive: false });
+
+document.addEventListener('touchend', (e) => {
+  const now = performance.now();
+  if (now - lastTouchTime <= 320) {
+    e.preventDefault(); // Evitar zoom por doble toque rápido
+  }
+  lastTouchTime = now;
+}, { passive: false });
+
+// Cambiar de color al tocar o hacer clic
+function handleTrigger(clientX, clientY, target) {
   const roseEl = document.getElementById("rose");
-  if (roseEl && roseEl.contains(e.target)) {
+  if (roseEl && roseEl.contains(target)) {
     updateRoseColor(index + 1, true);
-    createSparkles(e.clientX, e.clientY, 34);
-  } else if (e.clientX < window.innerWidth * 0.35) {
+    createSparkles(clientX, clientY, 32);
+  } else if (clientX < window.innerWidth * 0.35) {
     updateRoseColor(index - 1, true);
-    createSparkles(e.clientX, e.clientY, 18);
+    createSparkles(clientX, clientY, 18);
   } else {
     updateRoseColor(index + 1, true);
-    createSparkles(e.clientX, e.clientY, 18);
+    createSparkles(clientX, clientY, 18);
   }
+}
+
+window.addEventListener("click", (e) => {
+  handleTrigger(e.clientX, e.clientY, e.target);
 });
 
 window.addEventListener("keydown", (e) => {
@@ -88,10 +96,11 @@ window.addEventListener("keydown", (e) => {
 });
 
 /* ==========================================================================
-   DESTELLOS AL TOCAR LA ROSA (OPTIMIZADO A 120HZ)
+   CANVAS DE PARTÍCULAS (SIN PARPADEO / SIN FLICKER NEGRO)
    ========================================================================== */
 const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d", { alpha: true, desynchronized: true });
+// Contexto 2D estándar sincronizado con el compositor del navegador
+const ctx = canvas.getContext("2d");
 let w = (canvas.width = window.innerWidth);
 let h = (canvas.height = window.innerHeight);
 
@@ -116,7 +125,7 @@ for (let i = 0; i < 90; i++) {
   });
 }
 
-// Luciérnagas mágicas que suben suavemente con el color de la rosa
+// Luciérnagas mágicas que suben suavemente
 for (let i = 0; i < 28; i++) {
   fireflies.push({
     x: Math.random() * w,
@@ -129,7 +138,7 @@ for (let i = 0; i < 28; i++) {
   });
 }
 
-// Estrellas fugaces ocasionales en el fondo
+// Estrellas fugaces ocasionales
 function spawnShootingStar() {
   if (shootingStars.length < 2 && Math.random() < 0.012) {
     shootingStars.push({
@@ -161,7 +170,7 @@ function createSparkles(x, y, count = 30) {
 }
 
 /* ==========================================================================
-   ANIMACIÓN DE PÉTALOS Y CAÍDA DE HOJAS A 120HZ (GPU + SUBPÍXEL)
+   ANIMACIÓN DE PÉTALOS Y CAÍDA DE HOJAS
    ========================================================================== */
 const petalEl1 = document.getElementById("fallingPetal1");
 const petalEl2 = document.getElementById("fallingPetal2");
@@ -194,10 +203,9 @@ const fallingPetalsState = [
 
 let lastFrameTime = performance.now();
 
-// Movimiento respiratorio ultra fluido a 120Hz para los pétalos de la rosa
-function updateRoseBloom120Hz(now) {
+function updateRoseBloom(now) {
   const t = now * 0.0018;
-  const s = (Math.sin(t) + 1) * 0.5; // Oscilación suave entre 0 y 1
+  const s = (Math.sin(t) + 1) * 0.5;
 
   if (bloomPetals[3]) {
     const deg4 = -15 - s * 4;
@@ -243,7 +251,6 @@ function updateFallingPetals(dt) {
           ? (1 - progress) / 0.12
           : 0.95;
 
-      // Uso de translate3d para renderizado en GPU a 120Hz sin saltos de píxel
       p.el.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg)`;
       p.el.style.opacity = Math.max(0, alpha).toFixed(3);
 
@@ -256,11 +263,11 @@ function updateFallingPetals(dt) {
   }
 }
 
-// Rastro suave de polvo de hadas a 120Hz al mover el mouse o deslizar el dedo
+// Rastro de hadas al deslizar el dedo o mover mouse
 let lastTrail = 0;
 function handlePointerMove(x, y) {
   const now = performance.now();
-  if (now - lastTrail > 8) {
+  if (now - lastTrail > 10) {
     lastTrail = now;
     const c = COLORS[index];
     particles.push({
@@ -286,18 +293,16 @@ window.addEventListener("touchmove", (e) => {
 function animate(now = performance.now()) {
   const rawDt = now - lastFrameTime;
   const dt = Math.min(32, Math.max(1, rawDt));
-  // Factor de escala temporal para que a 120Hz (8.33ms por frame) todo se mueva con máxima suavidad
   const step = dt / 16.6667;
   lastFrameTime = now;
 
   ctx.clearRect(0, 0, w, h);
   const c = COLORS[index];
 
-  // Actualizar apertura de pétalos y caída de hojas a 120Hz
-  updateRoseBloom120Hz(now);
+  updateRoseBloom(now);
   updateFallingPetals(dt);
 
-  // 1. Estrellas del cielo titilando
+  // 1. Estrellas del fondo
   for (let i = 0; i < bgStars.length; i++) {
     const s = bgStars[i];
     s.alpha += s.da * step;
@@ -345,7 +350,7 @@ function animate(now = performance.now()) {
     ctx.restore();
   }
 
-  // 3. Luciérnagas del color de la rosa flotando hacia arriba
+  // 3. Luciérnagas
   for (let i = 0; i < fireflies.length; i++) {
     const f = fireflies[i];
     f.angle += 0.02 * step;
@@ -368,7 +373,7 @@ function animate(now = performance.now()) {
     ctx.restore();
   }
 
-  // 4. Destellos al tocar o cambiar la rosa
+  // 4. Destellos al cambiar o tocar
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     p.x += p.vx * step;
