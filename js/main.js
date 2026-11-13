@@ -175,38 +175,9 @@ function createSparkles(x, y, count = 30) {
 }
 
 /* ==========================================================================
-   ANIMACIÓN DE PÉTALOS Y CAÍDA DE HOJAS
+   ANIMACIÓN DE PÉTALOS DE LA ROSA (RESPIRACIÓN)
    ========================================================================== */
-const petalEl1 = document.getElementById("fallingPetal1");
-const petalEl2 = document.getElementById("fallingPetal2");
 const bloomPetals = document.querySelectorAll(".petals > div");
-
-const fallingPetalsState = [
-  {
-    el: petalEl1,
-    startX: 102,
-    startY: 118,
-    endY: 391,
-    swayAmp: 12,
-    duration: 6200,
-    delay: 700,
-    elapsed: 0,
-    phase: "waiting"
-  },
-  {
-    el: petalEl2,
-    startX: 80,
-    startY: 118,
-    endY: 391,
-    swayAmp: -12,
-    duration: 6800,
-    delay: 3900,
-    elapsed: 0,
-    phase: "waiting"
-  }
-];
-
-let lastFrameTime = performance.now();
 
 function updateRoseBloom(now) {
   const t = now * 0.0018;
@@ -230,40 +201,132 @@ function updateRoseBloom(now) {
   }
 }
 
-function updateFallingPetals(dt) {
-  for (let i = 0; i < fallingPetalsState.length; i++) {
-    const p = fallingPetalsState[i];
-    if (!p.el) continue;
+/* ==========================================================================
+   SISTEMA DE PÉTALOS CAÍDOS: INICIA CON 2 EN EL SUELO.
+   CADA PÉTALO QUE CAE ATERRIZA, SE QUEDA EN SU LUGAR, Y EL ANTIGUO DESAPARECE.
+   ========================================================================== */
+const deadPetalsContainer = document.getElementById("deadPetals");
 
-    p.elapsed += dt;
+const GROUND_SLOTS = [
+  { x: 79, y: 390, rot: -12 },
+  { x: 101, y: 392, rot: 14 }
+];
 
-    if (p.phase === "waiting") {
-      p.el.style.opacity = "0";
-      if (p.elapsed >= p.delay) {
-        p.elapsed = 0;
-        p.phase = "falling";
+// Arreglo para mantener únicamente los 2 pétalos descansando en el suelo
+const restingPetals = [null, null];
+
+function createPetalNode(x, y, rot, opacity) {
+  const el = document.createElement("div");
+  el.style.transform = `translate3d(${x.toFixed(2)}px, ${y.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg)`;
+  el.style.opacity = opacity.toFixed(3);
+  if (deadPetalsContainer) {
+    deadPetalsContainer.appendChild(el);
+  }
+  return el;
+}
+
+// 1. Inicializar con DOS pétalos ya caídos en el suelo desde el primer segundo
+function initGroundPetals() {
+  if (!deadPetalsContainer) return;
+  deadPetalsContainer.innerHTML = "";
+  restingPetals[0] = createPetalNode(GROUND_SLOTS[0].x, GROUND_SLOTS[0].y, GROUND_SLOTS[0].rot, 0.55);
+  restingPetals[1] = createPetalNode(GROUND_SLOTS[1].x, GROUND_SLOTS[1].y, GROUND_SLOTS[1].rot, 0.55);
+}
+
+// 2. Control del ciclo de caída
+let targetSlotIndex = 0; // Alternará entre 0 y 1
+let fallCycle = {
+  el: null,
+  oldEl: null,
+  startX: 102,
+  startY: 118,
+  targetSlot: GROUND_SLOTS[0],
+  duration: 5400,
+  elapsed: 0,
+  phase: "waiting", // Comienza esperando un breve momento
+  waitDuration: 2400,
+  waitElapsed: 0
+};
+
+function launchNextPetal() {
+  const slot = GROUND_SLOTS[targetSlotIndex];
+  const oldPetal = restingPetals[targetSlotIndex];
+  
+  // Nace en la rosa arriba
+  const startX = targetSlotIndex === 0 ? 102 : 82;
+  const startY = 118;
+  const newPetal = createPetalNode(startX, startY, -20, 0);
+
+  fallCycle = {
+    el: newPetal,
+    oldEl: oldPetal,
+    targetIndex: targetSlotIndex,
+    startX,
+    startY,
+    targetSlot: slot,
+    duration: 5400,
+    elapsed: 0,
+    phase: "falling",
+    waitDuration: 3400,
+    waitElapsed: 0
+  };
+}
+
+function updatePetalsCycle(dt) {
+  if (fallCycle.phase === "waiting") {
+    fallCycle.waitElapsed += dt;
+    if (fallCycle.waitElapsed >= fallCycle.waitDuration) {
+      launchNextPetal();
+    }
+    return;
+  }
+
+  if (fallCycle.phase === "falling" && fallCycle.el) {
+    fallCycle.elapsed += dt;
+    const progress = Math.min(1, fallCycle.elapsed / fallCycle.duration);
+
+    // Movimiento oscilante natural de hoja cayendo
+    const swayDirection = fallCycle.targetIndex === 0 ? 14 : -14;
+    const sway = Math.sin(progress * Math.PI * 2.5) * swayDirection * (1 - progress * 0.35);
+    const currX = fallCycle.startX + (fallCycle.targetSlot.x - fallCycle.startX) * progress + sway;
+    const currY = fallCycle.startY + (fallCycle.targetSlot.y - fallCycle.startY) * progress;
+    const currRot = -20 + Math.sin(progress * Math.PI * 2.5) * 22 + (fallCycle.targetSlot.rot + 20) * progress;
+
+    // Opacidad de entrada del nuevo pétalo
+    const newAlpha = progress < 0.15 ? (progress / 0.15) * 0.55 : 0.55;
+    fallCycle.el.style.transform = `translate3d(${currX.toFixed(2)}px, ${currY.toFixed(2)}px, 0) rotate(${currRot.toFixed(2)}deg)`;
+    fallCycle.el.style.opacity = newAlpha.toFixed(3);
+
+    // Cuando el nuevo pétalo se acerca al suelo (último 35% del trayecto),
+    // el pétalo antiguo se desvanece suavemente (fade out)
+    if (fallCycle.oldEl) {
+      if (progress > 0.65) {
+        const fadeFraction = (progress - 0.65) / 0.35; // 0 a 1
+        const oldAlpha = 0.55 * (1 - fadeFraction);
+        fallCycle.oldEl.style.opacity = Math.max(0, oldAlpha).toFixed(3);
       }
-    } else if (p.phase === "falling") {
-      const progress = Math.min(1, p.elapsed / p.duration);
-      const currentY = p.startY + (p.endY - p.startY) * progress;
-      const swayX = Math.sin(progress * Math.PI * 2.5) * p.swayAmp * (1 - progress * 0.4);
-      const currentX = p.startX + swayX;
-      const rot = -20 + Math.sin(progress * Math.PI * 2.5) * 22 + progress * 25;
+    }
 
-      const alpha = progress < 0.12
-        ? progress / 0.12
-        : progress > 0.88
-          ? (1 - progress) / 0.12
-          : 0.95;
-
-      p.el.style.transform = `translate3d(${currentX.toFixed(2)}px, ${currentY.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg)`;
-      p.el.style.opacity = Math.max(0, alpha).toFixed(3);
-
-      if (progress >= 1) {
-        p.phase = "waiting";
-        p.elapsed = 0;
-        p.delay = 1800 + i * 1500;
+    // ATERRIZAJE: El nuevo pétalo mantiene su lugar en el suelo y el antiguo desaparece
+    if (progress >= 1) {
+      // Eliminar definitivamente el pétalo viejo del DOM
+      if (fallCycle.oldEl && fallCycle.oldEl.parentNode) {
+        fallCycle.oldEl.parentNode.removeChild(fallCycle.oldEl);
       }
+
+      // Fijar el nuevo pétalo en el suelo exactamente en su lugar
+      fallCycle.el.style.transform = `translate3d(${fallCycle.targetSlot.x}px, ${fallCycle.targetSlot.y}px, 0) rotate(${fallCycle.targetSlot.rot}deg)`;
+      fallCycle.el.style.opacity = "0.55";
+      restingPetals[fallCycle.targetIndex] = fallCycle.el;
+
+      // Alternar para el siguiente turno
+      targetSlotIndex = 1 - targetSlotIndex;
+
+      // Entrar en fase de espera (solo quedan 2 pétalos en pantalla)
+      fallCycle.phase = "waiting";
+      fallCycle.waitElapsed = 0;
+      fallCycle.el = null;
+      fallCycle.oldEl = null;
     }
   }
 }
@@ -295,6 +358,8 @@ window.addEventListener("touchmove", (e) => {
   }
 }, { passive: true });
 
+let lastFrameTime = performance.now();
+
 function animate(now = performance.now()) {
   const rawDt = now - lastFrameTime;
   const dt = Math.min(32, Math.max(1, rawDt));
@@ -305,7 +370,7 @@ function animate(now = performance.now()) {
   const c = COLORS[index];
 
   updateRoseBloom(now);
-  updateFallingPetals(dt);
+  updatePetalsCycle(dt);
 
   // 1. Estrellas del fondo
   for (let i = 0; i < bgStars.length; i++) {
@@ -405,8 +470,13 @@ function animate(now = performance.now()) {
   requestAnimationFrame(animate);
 }
 
-// Iniciar animación al cargar
+// Inicialización
+window.addEventListener("DOMContentLoaded", () => {
+  initGroundPetals();
+});
+
 window.addEventListener("load", () => {
+  initGroundPetals();
   lastFrameTime = performance.now();
   animate();
 });
